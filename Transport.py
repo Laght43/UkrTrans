@@ -6,12 +6,12 @@ class Transport(ABC):
     """
     abstract class for all another transports types
     """
-    def __init__(self, id: int, speed: int):
+    def __init__(self, id: int, speed: int, route=None, price=None):
         self._id = id
         self._speed = speed
-        self._route = []
+        self._route = list(route) if route else []
         self._time_coeficient = 5 # how many seconds will take 1 hour in program
-        self._price = None
+        self._price = price
         self._current_station = None
         self._is_running = True
 
@@ -77,6 +77,10 @@ class Transport(ABC):
         return result
 
     @property
+    def speed(self):
+        return self._speed
+
+    @property
     def id(self):
         return self._id
 
@@ -87,3 +91,11 @@ class Transport(ABC):
     @property
     def route(self):
         return self._route
+
+    @property
+    def price(self):
+        return self._price
+
+    @price.setter
+    def price(self, price):
+        self._price = price

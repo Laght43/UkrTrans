@@ -1,6 +1,7 @@
 from StationManager import BusStation, TrainStation, AirplaneStation
 from Vehicles import Bus, Train, Airplane
 import threading
+import json
 
 class UkrTransControl():
     def __init__(self, name):
@@ -11,7 +12,156 @@ class UkrTransControl():
         self.__trains = []
         self.__buses = []
         self.__airplanes = []
+        self.__save_file = "save_data.json"
 
+    def save(self):
+        """Save all data to json file"""
+        data = dict()
+
+        data["name"] = self.__name
+
+        trains = dict()
+        for train in self.__trains:
+            train_data = {
+                "speed": train.speed,
+                "route": [station.id for station in train.route],
+                "price": train.price
+            }
+            trains[train.id] = train_data
+        data["trains"] = trains
+
+        buses = dict()
+        for bus in self.__buses:
+            bus_data = {
+                "speed": bus.speed,
+                "route": [station.id for station in bus.route],
+                "price": bus.price
+            }
+            buses[bus.id] = bus_data
+        data["buses"] = buses
+
+        airplanes = dict()
+        for airplane in self.__airplanes:
+            airplane_data = {
+                "speed": airplane.speed,
+                "route": [station.id for station in airplane.route],
+                "price": airplane.price
+            }
+            airplanes[airplane.id] = airplane_data
+        data["airplanes"] = airplanes
+
+        train_stations = dict()
+        for train_station in self.__train_stations:
+            train_station_data = {
+                "name": train_station.name,
+                "pos_x": train_station.pos_x,
+                "pos_y": train_station.pos_y,
+                "stop_time": train_station.stop_time
+            }
+            train_stations[train_station.id] = train_station_data
+        data["train_stations"] = train_stations
+
+        bus_stations = dict()
+        for bus_station in self.__bus_stations:
+            bus_station_data = {
+                "name": bus_station.name,
+                "pos_x": bus_station.pos_x,
+                "pos_y": bus_station.pos_y,
+                "stop_time": bus_station.stop_time
+            }
+            bus_stations[bus_station.id] = bus_station_data
+        data["bus_stations"] = bus_stations
+
+        airplane_stations = dict()
+        for airplane_station in self.__airplane_stations:
+            airplane_station_data = {
+                "name": airplane_station.name,
+                "pos_x": airplane_station.pos_x,
+                "pos_y": airplane_station.pos_y,
+                "stop_time": airplane_station.stop_time
+            }
+            airplane_stations[airplane_station.id] = airplane_station_data
+        data["airplane_stations"] = airplane_stations
+
+        with open(self.__save_file, "w") as f:
+            json.dump(data, f, indent=4)
+
+    def load(self):
+        """Load data from json file"""
+        with open(self.__save_file, "r") as f:
+            data = json.load(f)
+
+            self.__name = data["name"]
+
+            train_stations = data["train_stations"]
+            for train_station_data in train_stations.values():
+                name = train_station_data["name"]
+                id = len(self.__train_stations)
+                pos_x = train_station_data["pos_x"]
+                pos_y = train_station_data["pos_y"]
+                stop_time = train_station_data["stop_time"]
+                train_station = TrainStation(name, id, pos_x, pos_y, stop_time)
+                self.__train_stations.append(train_station)
+
+            bus_stations = data["bus_stations"]
+            for bus_station_data in bus_stations.values():
+                name = bus_station_data["name"]
+                id = len(self.__bus_stations)
+                pos_x = bus_station_data["pos_x"]
+                pos_y = bus_station_data["pos_y"]
+                stop_time = bus_station_data["stop_time"]
+                bus_station = BusStation(name, id, pos_x, pos_y, stop_time)
+                self.__bus_stations.append(bus_station)
+
+            airplane_sations = data["airplane_stations"]
+            for airplane_staion_data in airplane_sations.values():
+                name = airplane_staion_data["name"]
+                id = len(self.__airplane_stations)
+                pos_x = airplane_staion_data["pos_x"]
+                pos_y = airplane_staion_data["pos_y"]
+                stop_time = airplane_staion_data["stop_time"]
+                airplane_station = AirplaneStation(name, id, pos_x, pos_y, stop_time)
+                self.__airplane_stations.append(airplane_station)
+
+            trains = data["trains"]
+            for train_data in trains.values():
+                id = len(self.__trains)
+                speed = train_data["speed"]
+                stations = train_data["route"]
+                route = self.__load_route_helper(self.__train_stations, stations)
+                price = train_data["price"]
+                train = Train(id, speed, route, price)
+                self.__trains.append(train)
+
+            buses = data["buses"]
+            for bus_data in buses.values():
+                id = len(self.__buses)
+                speed = bus_data["speed"]
+                stations = bus_data["route"]
+                route = self.__load_route_helper(self.__bus_stations, stations)
+                price = bus_data["price"]
+                bus = Bus(id, speed, route, price)
+                self.__buses.append(bus)
+
+            airplanes = data["airplanes"]
+            for airplane_data in airplanes.values():
+                id = len(self.__airplanes)
+                speed = airplane_data["speed"]
+                stations = airplane_data["route"]
+                route = self.__load_route_helper(self.__airplanes, stations)
+                price = airplane_data["price"]
+                airplane = Airplane(id, speed, route, price)
+                self.__airplanes.append(airplane)
+
+    def __load_route_helper(self, stations, route_stations):
+        """Helper function to create route in load"""
+        result = []
+        for station in stations:
+            for i in route_stations:
+                if station.id == i:
+                    result.append(station)
+        return result
+            
     def show_stations(self):
         """"Show information about all stations"""
         print("=====Train stations=====")
